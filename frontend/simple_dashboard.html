@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Trafic</title>
+    <style>
+        body { font-family: Arial; margin: 20px; background: #f5f5f5; }
+        .container { display: flex; gap: 20px; }
+        .panel { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .segment { padding: 15px; margin: 10px 0; border-radius: 5px; color: white; font-weight: bold; }
+        .low { background: green; }
+        .medium { background: orange; }
+        .high { background: red; }
+        .btn { padding: 10px 15px; margin: 5px; border: none; border-radius: 5px; color: white; cursor: pointer; }
+        .match { background: #e74c3c; }
+        .pedestrian { background: #f39c12; }
+        .vip { background: #9b59b6; }
+        .reset { background: #3498db; }
+        .traffic-light { width: 30px; height: 30px; border-radius: 50%; display: inline-block; margin-left: 10px; }
+        .red { background: red; }
+        .green { background: green; }
+    </style>
+</head>
+<body>
+    <h1>🚦 Dashboard Trafic Intelligent</h1>
+    <p>Serveur: <span id="status" style="color: green;">Connecté</span></p>
+    
+    <div class="container">
+        <div class="panel" style="flex: 2;">
+            <h2>Segments de Trafic</h2>
+            <div id="segments-container">
+                <!-- Rempli par JavaScript -->
+            </div>
+        </div>
+        
+        <div class="panel" style="flex: 1;">
+            <h2>Contrôles</h2>
+            <button class="btn match" onclick="triggerScenario('match')">⚽ Match</button>
+            <button class="btn pedestrian" onclick="triggerScenario('pedestrians')">🚶 Piétons</button>
+            <button class="btn vip" onclick="triggerScenario('vip')">👑 VIP</button>
+            <button class="btn reset" onclick="triggerScenario('reset')">🔄 Reset</button>
+            
+            <h2 style="margin-top: 20px;">Statistiques</h2>
+            <div id="stats">
+                <p>Total voitures: <span id="total-cars">0</span></p>
+                <p>Total piétons: <span id="total-pedestrians">0</span></p>
+                <p>Équité système: <span id="fairness">0%</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // URL du backend
+        const API_URL = 'http://localhost:5000';
+        
+        // Récupérer les données
+        async function fetchData() {
+            try {
+                const response = await fetch(`${API_URL}/api/traffic`);
+                const data = await response.json();
+                updateDisplay(data);
+                document.getElementById('status').style.color = 'green';
+                document.getElementById('status').textContent = 'Connecté';
+            } catch (error) {
+                console.error('Erreur:', error);
+                document.getElementById('status').style.color = 'red';
+                document.getElementById('status').textContent = 'Déconnecté';
+            }
+        }
+        
+        // Mettre à jour l'affichage
+        function updateDisplay(data) {
+            const container = document.getElementById('segments-container');
+            container.innerHTML = '';
+            
+            let totalCars = 0;
+            let totalPedestrians = 0;
+            
+            // Pour chaque segment
+            for (const [id, segment] of Object.entries(data.segments || {})) {
+                totalCars += segment.cars || 0;
+                totalPedestrians += segment.pedestrians || 0;
+                
+                const div = document.createElement('div');
+                div.className = `segment ${segment.congestion || 'low'}`;
+                div.innerHTML = `
+                    <strong>Segment ${id}</strong>
+                    <div class="traffic-light ${segment.light || 'red'}"></div>
+                    <br>
+                    🚗 Voitures: ${segment.cars || 0}
+                    <br>
+                    🚶 Piétons: ${segment.pedestrians || 0}
+                    <br>
+                    ⏱️ Attente: ${segment.waiting_time || 0}s
+                    <br>
+                    📊 Congestion: ${segment.congestion || 'low'}
+                `;
+                container.appendChild(div);
+            }
+            
+            // Mettre à jour les stats
+            document.getElementById('total-cars').textContent = totalCars;
+            document.getElementById('total-pedestrians').textContent = totalPedestrians;
+            
+            // Calculer équité simple
+            const segments = Object.values(data.segments || {});
+            if (segments.length > 0) {
+                const waitingTimes = segments.map(s => s.waiting_time || 0);
+                const maxWait = Math.max(...waitingTimes);
+                const minWait = Math.min(...waitingTimes);
+                const fairness = maxWait === 0 ? 100 : Math.max(0, 100 - (maxWait - minWait));
+                document.getElementById('fairness').textContent = `${Math.round(fairness)}%`;
+            }
+        }
+        
+        // Déclencher scénario
+        async function triggerScenario(scenario) {
+            try {
+                const response = await fetch(`${API_URL}/api/scenario/${scenario}`);
+                const result = await response.json();
+                alert(result.message || 'Scénario activé!');
+                fetchData(); // Rafraîchir
+            } catch (error) {
+                alert('Erreur! Vérifie la connexion au serveur.');
+            }
+        }
+        
+        // Initialiser
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchData();
+            // Rafraîchir toutes les 3 secondes
+            setInterval(fetchData, 3000);
+        });
+    </script>
+</body>
+</html>

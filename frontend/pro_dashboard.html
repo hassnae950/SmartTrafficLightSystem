@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>🚦 Smart Traffic Flow - Dashboard Pro</title>
+    <style>
+        :root {
+            --green: #2ecc71; --orange: #f39c12; --red: #e74c3c; 
+            --blue: #3498db; --purple: #9b59b6; --dark: #2c3e50;
+        }
+        
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            margin: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh; color: white;
+        }
+        
+        .header {
+            background: rgba(0,0,0,0.7); 
+            padding: 20px; 
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 25px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .segment-card {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .segment {
+            background: rgba(255,255,255,0.15);
+            border-radius: 10px;
+            padding: 15px;
+            transition: all 0.3s;
+        }
+        
+        .segment:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.25);
+        }
+        
+        .segment.low { border-left: 5px solid var(--green); }
+        .segment.medium { border-left: 5px solid var(--orange); }
+        .segment.high { border-left: 5px solid var(--red); }
+        
+        .traffic-light {
+            width: 25px; height: 25px; 
+            border-radius: 50%; 
+            display: inline-block;
+            margin-right: 10px;
+            box-shadow: 0 0 10px;
+        }
+        
+        .light-red { background: var(--red); }
+        .light-green { background: var(--green); }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .controls {
+            display: grid;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover { transform: scale(1.05); opacity: 0.9; }
+        .btn-match { background: linear-gradient(135deg, var(--red), #c0392b); }
+        .btn-pedestrians { background: linear-gradient(135deg, var(--orange), #e67e22); }
+        .btn-vip { background: linear-gradient(135deg, var(--purple), #8e44ad); }
+        .btn-reset { background: linear-gradient(135deg, var(--blue), #2980b9); }
+        
+        .equity-meter {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            height: 20px;
+            margin: 15px 0;
+            overflow: hidden;
+        }
+        
+        .equity-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--green), var(--orange));
+            transition: width 0.5s;
+        }
+        
+        .timestamp {
+            text-align: center;
+            color: rgba(255,255,255,0.7);
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚦 Smart Traffic Flow - CAN 2025 & World Cup 2030</h1>
+        <p>Système intelligent de gestion du trafic avec équité algorithmique</p>
+        <div>
+            <span id="connection-status" style="background: var(--green); padding: 8px 20px; border-radius: 20px; font-weight: bold;">
+                ✅ CONNECTÉ AU SERVEUR
+            </span>
+        </div>
+    </div>
+    
+    <div class="dashboard">
+        <!-- Section gauche : Segments -->
+        <div class="card">
+            <h2>📊 Segments de Trafic en Temps Réel</h2>
+            <div class="segment-card" id="segments-container">
+                <!-- Rempli par JS -->
+            </div>
+            <div class="timestamp" id="update-time">
+                Dernière mise à jour: --
+            </div>
+        </div>
+        
+        <!-- Section droite : Contrôles et Stats -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div class="card">
+                <h2>🎮 Contrôles de Simulation</h2>
+                <p style="opacity: 0.8; margin-bottom: 15px;">Testez différents scénarios pour la CAN 2025</p>
+                <div class="controls">
+                    <button class="btn btn-match" onclick="triggerScenario('match')">
+                        <span style="font-size: 20px;">⚽</span> Scénario Match
+                    </button>
+                    <button class="btn btn-pedestrians" onclick="triggerScenario('pedestrians')">
+                        <span style="font-size: 20px;">🚶‍♂️</span> Pic Piétons
+                    </button>
+                    <button class="btn btn-vip" onclick="triggerScenario('vip')">
+                        <span style="font-size: 20px;">👑</span> Mode VIP
+                    </button>
+                    <button class="btn btn-reset" onclick="triggerScenario('reset')">
+                        <span style="font-size: 20px;">🔄</span> Réinitialiser
+                    </button>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>📈 Statistiques Globales</h2>
+                <div class="stats-grid">
+                    <div class="stat">
+                        <div>🚗 Voitures Totales</div>
+                        <div class="stat-value" id="total-cars">0</div>
+                    </div>
+                    <div class="stat">
+                        <div>🚶 Piétons</div>
+                        <div class="stat-value" id="total-pedestrians">0</div>
+                    </div>
+                    <div class="stat">
+                        <div>⚠️ Congestion</div>
+                        <div class="stat-value" id="avg-congestion">0%</div>
+                    </div>
+                    <div class="stat">
+                        <div>⚖️ Équité</div>
+                        <div class="stat-value" id="fairness-score">0%</div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Équité du Système</span>
+                        <span id="equity-percent">0%</span>
+                    </div>
+                    <div class="equity-meter">
+                        <div class="equity-fill" id="equity-bar" style="width: 0%"></div>
+                    </div>
+                    <p style="font-size: 14px; opacity: 0.8; margin-top: 10px;">
+                        Score d'équité entre tous les segments routiers
+                    </p>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h2>🎯 Objectifs CAN 2025</h2>
+                <ul style="line-height: 1.8;">
+                    <li>✅ Réduction du temps d'attente de 40%</li>
+                    <li>✅ Équité garantie à 90% minimum</li>
+                    <li>✅ Couloirs VIP pour équipes/officiels</li>
+                    <li>✅ Gestion intelligente des piétons</li>
+                    <li>✅ Dashboard temps réel pour gestionnaires</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:5000';
+        let trafficData = {};
+        
+        // Récupérer les données
+        async function fetchData() {
+            try {
+                const response = await fetch(`${API_URL}/api/traffic`);
+                trafficData = await response.json();
+                updateDisplay();
+                
+                document.getElementById('connection-status').innerHTML = 
+                    '✅ CONNECTÉ AU SERVEUR';
+                document.getElementById('connection-status').style.background = '#2ecc71';
+            } catch (error) {
+                console.error('Erreur:', error);
+                document.getElementById('connection-status').innerHTML = 
+                    '❌ DÉCONNECTÉ';
+                document.getElementById('connection-status').style.background = '#e74c3c';
+            }
+        }
+        
+        // Mettre à jour l'affichage
+        function updateDisplay() {
+            const container = document.getElementById('segments-container');
+            container.innerHTML = '';
+            
+            if (!trafficData.segments) return;
+            
+            let totalCars = 0;
+            let totalPedestrians = 0;
+            let congestionSum = 0;
+            let segmentCount = 0;
+            
+            // Pour chaque segment
+            Object.entries(trafficData.segments).forEach(([id, segment]) => {
+                totalCars += segment.cars || 0;
+                totalPedestrians += segment.pedestrians || 0;
+                
+                // Calculer congestion
+                let congestion = 'low';
+                let congestionPercent = 25;
+                if (segment.cars >= 25) {
+                    congestion = 'high';
+                    congestionPercent = 100;
+                } else if (segment.cars >= 15) {
+                    congestion = 'medium';
+                    congestionPercent = 50;
+                }
+                congestionSum += congestionPercent;
+                segmentCount++;
+                
+                const segmentHTML = `
+                    <div class="segment ${congestion}">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <h3 style="margin: 0;">Segment ${id}</h3>
+                            <div class="traffic-light ${segment.light === 'green' ? 'light-green' : 'light-red'}"></div>
+                        </div>
+                        <div style="margin-top: 10px; font-size: 14px;">
+                            <div>🚗 <strong>${segment.cars || 0}</strong> voitures</div>
+                            <div>🚶 <strong>${segment.pedestrians || 0}</strong> piétons</div>
+                            <div>⏱️ Attente: <strong>${segment.waiting_time || 0}s</strong></div>
+                            <div>📊 Congestion: <strong>${congestion.toUpperCase()}</strong></div>
+                        </div>
+                    </div>
+                `;
+                
+                container.innerHTML += segmentHTML;
+            });
+            
+            // Mettre à jour les stats
+            document.getElementById('total-cars').textContent = totalCars;
+            document.getElementById('total-pedestrians').textContent = totalPedestrians;
+            
+            const avgCongestion = Math.round(congestionSum / segmentCount);
+            document.getElementById('avg-congestion').textContent = `${avgCongestion}%`;
+            
+            // Calculer équité
+            const segments = Object.values(trafficData.segments);
+            if (segments.length > 0) {
+                const waitingTimes = segments.map(s => s.waiting_time || 0);
+                const maxWait = Math.max(...waitingTimes);
+                const minWait = Math.min(...waitingTimes);
+                const fairness = maxWait === 0 ? 100 : Math.max(0, 100 - (maxWait - minWait));
+                
+                document.getElementById('fairness-score').textContent = `${Math.round(fairness)}%`;
+                document.getElementById('equity-percent').textContent = `${Math.round(fairness)}%`;
+                document.getElementById('equity-bar').style.width = `${fairness}%`;
+                
+                // Changer couleur selon score
+                const equityBar = document.getElementById('equity-bar');
+                if (fairness >= 80) {
+                    equityBar.style.background = 'linear-gradient(90deg, #2ecc71, #27ae60)';
+                } else if (fairness >= 60) {
+                    equityBar.style.background = 'linear-gradient(90deg, #f39c12, #e67e22)';
+                } else {
+                    equityBar.style.background = 'linear-gradient(90deg, #e74c3c, #c0392b)';
+                }
+            }
+            
+            // Mettre à jour le temps
+            document.getElementById('update-time').textContent = 
+                `Dernière mise à jour: ${new Date().toLocaleTimeString()}`;
+        }
+        
+        // Déclencher scénario
+        async function triggerScenario(scenario) {
+            try {
+                const response = await fetch(`${API_URL}/api/scenario/${scenario}`);
+                const result = await response.json();
+                
+                // Notification visuelle
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed; top: 20px; right: 20px; 
+                    background: rgba(46, 204, 113, 0.9); color: white;
+                    padding: 15px 25px; border-radius: 10px; 
+                    z-index: 1000; font-weight: bold;
+                    animation: slideIn 0.5s ease-out;
+                `;
+                notification.textContent = result.message || 'Scénario activé!';
+                document.body.appendChild(notification);
+                
+                setTimeout(() => notification.remove(), 3000);
+                
+                fetchData(); // Rafraîchir
+            } catch (error) {
+                alert('Erreur de connexion au serveur!');
+            }
+        }
+        
+        // Initialiser
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchData();
+            // Rafraîchir toutes les 2 secondes
+            setInterval(fetchData, 2000);
+            
+            // Ajouter animation CSS
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+        });
+    </script>
+</body>
+</html>

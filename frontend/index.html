@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard Trafic - Hackathon</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f0f2f5; color: #333; }
+        
+        .header {
+            background: linear-gradient(135deg, #1a2980, #26d0ce);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .container {
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+        }
+        
+        .left-panel { flex: 1; }
+        .right-panel { width: 300px; }
+        
+        .panel {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .traffic-map {
+            height: 400px;
+            background: #e8f4f8;
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .road {
+            position: absolute;
+            background: #555;
+            border-radius: 5px;
+        }
+        
+        .segment {
+            position: absolute;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            border-radius: 5px;
+            transition: all 0.5s;
+        }
+        
+        .segment.low { background: #2ecc71; }
+        .segment.medium { background: #f39c12; }
+        .segment.high { background: #e74c3c; }
+        .segment.very-high { background: #c0392b; }
+        
+        .traffic-light {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid #333;
+            position: absolute;
+        }
+        
+        .traffic-light.red { background: #e74c3c; box-shadow: 0 0 15px #e74c3c; }
+        .traffic-light.green { background: #2ecc71; box-shadow: 0 0 15px #2ecc71; }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .stat-box {
+            background: #3498db;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .btn:hover { transform: translateY(-2px); }
+        .btn-match { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .btn-pedestrians { background: linear-gradient(135deg, #f39c12, #e67e22); }
+        .btn-vip { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+        .btn-reset { background: linear-gradient(135deg, #3498db, #2980b9); }
+        
+        .update-time {
+            text-align: center;
+            margin-top: 10px;
+            color: #7f8c8d;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚦 Flux de Circulation Intelligent</h1>
+        <p>Dashboard de gestion du trafic en temps réel</p>
+        <div id="connection-status" style="margin-top: 10px;">
+            <span style="background: #2ecc71; padding: 5px 15px; border-radius: 20px;">Connecté</span>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="left-panel">
+            <div class="panel">
+                <h2>🗺️ Carte du Trafic</h2>
+                <div class="traffic-map" id="traffic-map">
+                    <!-- Les segments seront générés par JavaScript -->
+                </div>
+                <div class="update-time" id="update-time">
+                    Dernière mise à jour: --
+                </div>
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <div class="panel">
+                <h2>📊 Statistiques</h2>
+                <div class="stats-grid" id="stats-grid">
+                    <!-- Rempli par JavaScript -->
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h2>🎮 Contrôles</h2>
+                <div class="controls">
+                    <button class="btn btn-match" onclick="triggerScenario('match')">
+                        ⚽ Scénario Match
+                    </button>
+                    <button class="btn btn-pedestrians" onclick="triggerScenario('pedestrians')">
+                        🚶‍♂️ Pic Piétons
+                    </button>
+                    <button class="btn btn-vip" onclick="triggerScenario('vip')">
+                        👑 Mode VIP
+                    </button>
+                    <button class="btn btn-reset" onclick="triggerScenario('reset')">
+                        🔄 Réinitialiser
+                    </button>
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h2>⚖️ Équité du Système</h2>
+                <div id="fairness-score" style="text-align: center; font-size: 48px; color: #2ecc71; font-weight: bold;">
+                    85%
+                </div>
+                <p style="text-align: center; color: #7f8c8d; margin-top: 10px;">
+                    Score d'équité entre les segments
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Au début du script
+console.log("Dashboard loading...");
+
+// Test connexion
+fetch('http://localhost:5000/api/traffic')
+    .then(res => {
+        console.log("Server response status:", res.status);
+        return res.json();
+    })
+    .then(data => {
+        console.log("Server data received:", data);
+        window.trafficData = data; // Pour debug
+    })
+    .catch(err => {
+        console.error("Connection error:", err);
+        alert("❌ Impossible de se connecter au serveur!\nVérifie que server_simple.py tourne sur port 5000");
+    });
+        // Configuration des segments
+        const segmentsConfig = [
+            { id: 1, name: "Segment 1", x: 50, y: 100, width: 200, height: 30, direction: "horizontal" },
+            { id: 2, name: "Segment 2", x: 250, y: 50, width: 30, height: 200, direction: "vertical" },
+            { id: 3, name: "Segment 3", x: 150, y: 200, width: 200, height: 30, direction: "horizontal" },
+            { id: 4, name: "Segment 4", x: 50, y: 250, width: 30, height: 200, direction: "vertical" }
+        ];
+        
+        let trafficData = {};
+        
+        // Initialiser la carte
+        function initMap() {
+            const map = document.getElementById('traffic-map');
+            
+            segmentsConfig.forEach(segment => {
+                // Route
+                const road = document.createElement('div');
+                road.className = 'road';
+                road.style.left = segment.x + 'px';
+                road.style.top = segment.y + 'px';
+                road.style.width = (segment.direction === 'horizontal' ? segment.width : 10) + 'px';
+                road.style.height = (segment.direction === 'vertical' ? segment.height : 10) + 'px';
+                map.appendChild(road);
+                
+                // Segment avec trafic
+                const segElement = document.createElement('div');
+                segElement.className = 'segment';
+                segElement.id = `segment-${segment.id}`;
+                segElement.style.left = segment.x + 'px';
+                segElement.style.top = segment.y + 'px';
+                segElement.style.width = segment.width + 'px';
+                segElement.style.height = segment.height + 'px';
+                segElement.innerHTML = `<span>S${segment.id}</span>`;
+                map.appendChild(segElement);
+                
+                // Feu de circulation
+                const light = document.createElement('div');
+                light.className = 'traffic-light';
+                light.id = `light-${segment.id}`;
+                light.style.left = (segment.x + segment.width/2 - 20) + 'px';
+                light.style.top = (segment.y + segment.height/2 - 20) + 'px';
+                map.appendChild(light);
+            });
+        }
+        
+        // Mettre à jour l'affichage
+        function updateDisplay(data) {
+            trafficData = data;
+            
+            // Mettre à jour chaque segment
+            if (data.segments) {
+                Object.entries(data.segments).forEach(([id, segment]) => {
+                    const segElement = document.getElementById(`segment-${id}`);
+                    const lightElement = document.getElementById(`light-${id}`);
+                    
+                    if (segElement) {
+                        segElement.className = `segment ${segment.congestion || 'low'}`;
+                        segElement.innerHTML = `<span>S${id}<br>${segment.cars} voitures</span>`;
+                    }
+                    
+                    if (lightElement) {
+                        lightElement.className = `traffic-light ${segment.light || 'red'}`;
+                    }
+                });
+            }
+            
+            // Mettre à jour les statistiques
+            updateStats(data);
+            
+            // Mettre à jour le temps
+            document.getElementById('update-time').textContent = 
+                `Dernière mise à jour: ${new Date().toLocaleTimeString()}`;
+        }
+        
+        // Mettre à jour les statistiques
+        function updateStats(data) {
+            const statsGrid = document.getElementById('stats-grid');
+            
+            if (!data.segments) return;
+            
+            const segments = Object.values(data.segments);
+            const totalCars = segments.reduce((sum, seg) => sum + seg.cars, 0);
+            const totalPedestrians = segments.reduce((sum, seg) => sum + seg.pedestrians, 0);
+            
+            // Calculer congestion moyenne
+            const congestionLevels = segments.map(seg => {
+                if (seg.cars < 10) return 25;
+                if (seg.cars < 25) return 50;
+                if (seg.cars < 40) return 75;
+                return 100;
+            });
+            const avgCongestion = Math.round(congestionLevels.reduce((a, b) => a + b, 0) / congestionLevels.length);
+            
+            // Calculer équité
+            const waitingTimes = segments.map(seg => seg.waiting_time || 0);
+            const maxWait = Math.max(...waitingTimes);
+            const minWait = Math.min(...waitingTimes);
+            const fairnessScore = maxWait === 0 ? 100 : Math.max(0, 100 - ((maxWait - minWait) * 3));
+            
+            statsGrid.innerHTML = `
+                <div class="stat-box">
+                    <div>🚗 Voitures</div>
+                    <div class="stat-value">${totalCars}</div>
+                </div>
+                <div class="stat-box">
+                    <div>🚶 Piétons</div>
+                    <div class="stat-value">${totalPedestrians}</div>
+                </div>
+                <div class="stat-box">
+                    <div>⚠️ Congestion</div>
+                    <div class="stat-value">${avgCongestion}%</div>
+                </div>
+                <div class="stat-box">
+                    <div>⚖️ Équité</div>
+                    <div class="stat-value">${Math.round(fairnessScore)}%</div>
+                </div>
+            `;
+            
+            document.getElementById('fairness-score').textContent = `${Math.round(fairnessScore)}%`;
+            document.getElementById('fairness-score').style.color = 
+                fairnessScore > 80 ? '#2ecc71' : fairnessScore > 60 ? '#f39c12' : '#e74c3c';
+        }
+        
+        // Déclencher un scénario
+        async function triggerScenario(scenario) {
+            try {
+                const response = await fetch(`http://localhost:5000/api/scenario/${scenario}`);
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    alert(result.message);
+                    fetchTrafficData(); // Rafraîchir les données
+                }
+            } catch (error) {
+                console.error('Erreur:', error);
+                alert('Erreur de connexion au serveur');
+            }
+        }
+        
+        // Récupérer les données du serveur
+        async function fetchTrafficData() {
+            try {
+                const response = await fetch('http://localhost:5000/api/traffic');
+                const data = await response.json();
+                updateDisplay(data);
+            } catch (error) {
+                console.error('Erreur de connexion:', error);
+                document.getElementById('connection-status').innerHTML = 
+                    '<span style="background: #e74c3c; padding: 5px 15px; border-radius: 20px;">Déconnecté</span>';
+            }
+        }
+        
+        // Initialiser
+        document.addEventListener('DOMContentLoaded', () => {
+            initMap();
+            fetchTrafficData();
+            
+            // Rafraîchir toutes les 3 secondes
+            setInterval(fetchTrafficData, 3000);
+        });
+    </script>
+</body>
+</html>

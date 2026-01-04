@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Dashboard - Flux de Circulation Intelligent</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      .dashboard {
+        display: flex;
+        height: 90vh;
+        gap: 20px;
+      }
+      .map-container {
+        flex: 3;
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .sidebar {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .panel {
+        background: white;
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+      .traffic-light {
+        width: 30px;
+        height: 90px;
+        border: 2px solid #333;
+        border-radius: 5px;
+        display: inline-block;
+        margin: 5px;
+      }
+      .traffic-light.green {
+        box-shadow: 0 0 15px #0f0;
+      }
+      .segment {
+        stroke-width: 8;
+        transition: all 0.5s;
+      }
+      .segment-low {
+        stroke: #2ecc71;
+      }
+      .segment-medium {
+        stroke: #f39c12;
+      }
+      .segment-high {
+        stroke: #e74c3c;
+      }
+      .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .stat-box {
+        background: #3498db;
+        color: white;
+        padding: 10px;
+        border-radius: 5px;
+        text-align: center;
+      }
+      .car-dot {
+        width: 8px;
+        height: 8px;
+        background: #2c3e50;
+        border-radius: 50%;
+        position: absolute;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🚦 Flux de Circulation Intelligent - Dashboard Admin</h1>
+    <div class="dashboard">
+      <div class="map-container" id="map"></div>
+      <div class="sidebar">
+        <div class="panel">
+          <h3>📊 Statistiques Temps Réel</h3>
+          <div class="stats-grid">
+            <div class="stat-box" id="total-cars">Voitures : 0</div>
+            <div class="stat-box" id="total-pedestrians">Piétons : 0</div>
+            <div class="stat-box" id="avg-congestion">Congestion : 0%</div>
+            <div class="stat-box" id="active-alerts">Alertes : 0</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>🎮 Contrôles de Simulation</h3>
+          <button onclick="simulateMatch()">⚽ Scénario Match</button>
+          <button onclick="simulatePedestrians()">🚶‍♂️ Pic Piétons</button>
+          <button onclick="simulateVIP()">👑 Bus VIP</button>
+          <button onclick="resetFairness()">🔄 Réinitialiser Équité</button>
+        </div>
+
+        <div class="panel">
+          <h3>⚖️ Indicateurs d'Équité</h3>
+          <div id="fairness-bars"></div>
+        </div>
+
+        <div class="panel">
+          <h3>📝 Logs IA</h3>
+          <div
+            id="logs"
+            style="height: 150px; overflow-y: auto; font-size: 12px"
+          ></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+      // Code JavaScript pour la simulation
+      // (v0 remplira ceci avec une simulation interactive)
+    </script>
+  </body>
+</html>
